@@ -1,76 +1,86 @@
-# FlightRadar24
+## PROJET FLIGHTRADAR24
 
-# Sujet
+ Pour la réalisation de ce projet, j'ai adopté pour une approche basée sur un développement local suivant une architecture medaillon. Voici les étapes détaillées du workflow:
 
+1.  # Extraction des Données:
 
-Créer un pipeline ETL (Extract, Transform, Load) permettant de traiter les données de l'API [flightradar24](https://www.flightradar24.com/), qui répertorie l'ensemble des vols aériens, aéroports, compagnies aériennes mondiales.
+ J'ai utilisé l'API de Flightradar24 (https://www.flightradar24.com/) pour extraire les données pertinentes pour notre analyse.
+ Pour faciliter cette extraction, j'ai fait appel à la bibliothèque FlightRadarAPI qui offre une interface optimisée pour cette API. La logique et les scripts d'extraction sont documentés dans le **BRONZE.py**. Une fois les données extraites, elles sont stockées dans ce que nous appelons le conteneur "bronze" (bronze container).
 
-> En python, cette librairie: https://github.com/JeanExtreme002/FlightRadarAPI facilite l'utilisation de l'API.
+2.  # Premiere transformation des données:
 
-## Résultats
+ Après avoir extrait les données localement, le fichier **SILVER.py** joue un rôle central dans lequel j'ai réalisé mes premières transformations sur ces données, puis sauvegardé les résultats obtenus sur un nouveau format et dans le conteneur "silver" (silver containers).
 
-Ce pipeline doit permettre de fournir les indicateurs suivants:
-1. La compagnie avec le + de vols en cours
-2. Pour chaque continent, la compagnie avec le + de vols régionaux actifs (continent d'origine == continent de destination)
-3. Le vol en cours avec le trajet le plus long
-4. Pour chaque continent, la longueur de vol moyenne
-5. L'entreprise constructeur d'avions avec le plus de vols actifs
-6. Pour chaque pays de compagnie aérienne, le top 3 des modèles d'avion en usage
-
-## Industrialisation
-
-Ce kata est orienté **industrialisation**. Le pipeline ETL doit être pensé comme un job se faisant éxécuter à échéance régulière (ex: toutes les 2 heures).
-
-Le job doit donc être
-* **fault-tolerant**: Un corner-case pas couvert ou une donnée corrompue ne doivent pas causer l'arret du job.
-* **observable**: En loggant les informations pertinantes
-* **systématique**: conserver les données & résultats dans un mécanisme de stockage, en adoptant une nomencalture adaptée permettant aux _data analyst_ en aval de retrouver les valeurs recherchées pour un couple `(Date, Heure)` donné.
+3. # Transformation final des données 
+Dans le fichier **GOLDS.py** , j'ai réalisé les toutes dernières transformations pour nettoyer et préparer les données de manière optimale. Une fois les données prêtes, je les ai sauvegardées localement dans un conteneur nommé "gold" (gold containers). Je sollicite dès maintenant les experts du domaine pour valider et analyser ces données.
 
 
-## ⚠️ Candidatures ⚠️
+3. # Analyse et Visualisation:
+
+ Avec les données nettoyées en place, j'ai procédé à l'analyse des indicateurs clés de performance (KPI)  pour notre projet.
+ Les resultats et les insights extraits de notre ensemble de données sont présentés de manière exhaustive dans le notebook Resultats.ipynb.
 
 
-> Le kata laisse volontairement beaucoup de liberté. Il y a une grande marge de progression entre un “MVP” et une implémentation “parfaite”. Au candidat de choisir sur quelles exigences mettre le focus dans son rendu.
+### PIPELINE ETL SUR AZURE
 
-> Le rendu MVP implémente au moins 4 des questions de l'énoncé, assorti d'un Readme expliquant la démarche choisie
+ Bien que l'infrastructure complète n'ait pas encore été déployée dans le cloud, j'ai élaboré un schéma représentant l'architecture envisagée pour le pipeline ETL. Vous trouverez ce schéma à l'adresse suivante :![Alt text](image.png)
 
-> A défaut d'implémenter tout le pipeline, proposez dans le README **un exemple d'architecture idéal de votre application industrialisée**(dans un environnement de PROD) sans avoir besoin de l'implémenter (ex: ordonnancement, monitoring, data modeling, etc.)
+ Voici les composants clés de notre solution:
 
-> Pour faire ce schéma, https://www.diagrams.net/ ou https://excalidraw.com/ sont vos amis :)
+1. # Source de Données
 
-> **Pour le rendu, Poussez sur une nouvelle branche git, ouvrez une merge request vers Main, et notifiez votre interlocuteur par message que le kata est fini.
+ FlightRadar24 API : Nous utiliserons l'API de FlightRadar24 (https://www.flightradar24.com/) comme source initiale de nos données.
 
-![flightradarimage](media-assets/flightradar.png)
+2. # Azure Data Factory
+
+ Azure Data Factory, un service d'intégration de données d'Azure, jouera le rôle principal dans l'orchestration et l'automatisation de notre pipeline ETL.
+ Nous utiliserons spécifiquement l'activité "Copy Data" d'Azure Data Factory pour ingérer les données depuis notre source initiale vers Azure Data Lake Gen2.
+
+3. # Azure Data Lake Storage Gen2
+
+ Azure Data Lake Storage Gen2, une solution de stockage sur Azure, stockera nos données. Il est conçu pour gérer de grands volumes de données structurées et non structurées tout en fournissant des capacités d'analyse.
+ Azure Databricks
+
+4. # Azure Databricks 
+ Il sera utilisé pour le traitement distribué et les transformations complexes de nos données. Cette plateforme unifiée permet une collaboration efficace et un traitement en temps réel.
+
+5. # Azure Synapse Analytics
+
+ Avec Azure Synapse, nous créerons et gérerons nos tables d'entrepôt de données, offrant ainsi une plateforme analytique intégrée pour la BI et le big data.
+
+6. # PowerBI
+ Microsoft Power BI, notre outil de choix pour la visualisation, permettra d'extraire des insights pertinents et de visualiser nos KPI de manière interactive.
+
+7. # Azure Active Directory (Azure AD)
+
+ Azure AD sera au cœur de notre stratégie de gestion des identités et des accès. Il offrira une authentification sécurisée et une gestion granulaire des autorisations pour tous nos services Azure.
+
+8. # Azure Key Vault
+
+ Pour garantir la sécurité de nos informations sensibles, nous utiliserons Azure Key Vault. Ce service d'Azure est dédié à la gestion sécurisée des secrets, des clés d'API et d'autres informations critiques.
 
 
-# Contexte & motivation derrière le kata
 
+## Industrialisation 
 
-Un data engineer doit être capable de concevoir un pipeline de données pour gérer un flux important et en tirer des informations pertinentes. 
+1. # Fault-Tolerant:
 
+ Avec ses capacités d'orchestration, ADF permet de gérer les erreurs, de reprendre les jobs après des échecs, et d'envoyer des alertes en cas d'erreur. Avec **RETRY POLICY** on peut spécifier combien de fois une activité doit être réessayée en cas d'échec et combien de temps attendre entre chaque essai. Pour ressoudre un probleme de donnée corrumpue on peut de ce fait faire une Gestion des exceptions
  
 
-En tant que data engineer, il est important de pouvoir **explorer & comprendre le dataset qu’on manipule** pour proposer les Vues adaptées au différents use-cases, et effectuer le data-cleaning nécessaire. 
+2. # Observable:
 
-https://www.flightradar24.com/ est une API fournissant des informations **en temps réel** sur le traffic aérien mondial. De ce fait, les informations qu'elle renvoie changent en parmanence. Pour en tirer des informations utiles, son traitement doit donc **doit être répété régulièrement**. Pour des raisons d'efficacité, on cherche donc à transformer ce pipeline ETL en **un job ne requérant pas d'intervention humaine.**
+ -**Azure Monitor** fournit des données de télémétrie complètes de l'ensemble d' environnement Azure. On peut visualiser ces données, les analyser et y répondre via des alertes, des tableaux de bord visuels et des règles d'automatisation.
+ - **Log Analytics**  est un service au sein d'Azure Monitor qui va nous permettre de collecter et d'analyser les données de télémétrie des ressources Azure.
+ -**Alerting** : On peut  configurer des alertes pour être informé en temps réel de tout dysfonctionnement ou échec. 
 
+3. # Systématique:
 
-# Specification [RFC2119](https://microformats.org/wiki/rfc-2119-fr) du kata
+ -Azure Data Lake Storage Gen2 : Ce service va stocker des données structurées et non structurées. Ici, on peut organiser les données en dossiers et sous-dossiers en utilisant la nomenclature horodatée indiquée Flights/rawzone/tech_year=2023/tech_month=2023-07/tech_day=2023-07-16/flights2023071619203001.csv,soit manuellement à l'aide de l'interface utilisateur du portail ou automatiquement via SDK/Azure CLI. 
 
+4. # Automatisation:
 
-* Un grand pouvoir implique de grandes responsabilités. Vos choix `DOIVENT` être justifiés dans un Readme. 
-
-* L'extraction des données `PEUT` être faite dans le format de votre choix. CSV, Parquet, AVRO, ... celui qu'il vous semble le plus adapté
-
-* Votre pipeline `DOIT` inclure une phase de [data cleaning](https://fr.wikipedia.org/wiki/Nettoyage_de_donn%C3%A9es)
-
-* Le rendu `PEUT` comporter un Jupyter notebook avec les résultats
-
-* votre pipeline `DEVRAIT` utiliser Apache Spark et l'API DataFrame
-
-* votre pipeline `DEVRAIT` stocker les données dans un dossier avec une nomenclature horodatée. Ex: `Flights/rawzone/tech_year=2023/tech_month=2023-07/tech_day=2023-07-16/flights2023071619203001.csv`
+ Azure Data Factory : ADF permet d'automatiser l'exécution des pipelines ETL à des intervalles réguliers en utilisant des déclencheurs spécifiques. Par exmple pour que notre piprline s'execute tous les 2 heures on peut utiliser (schedule trigger)
 
 
 
-
-> Questions Bonus: Quel aéroport a la plus grande différence entre le nombre de vol sortant et le nombre de vols entrants ?
